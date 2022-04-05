@@ -1,5 +1,5 @@
 {
-  "name": "Ulrar repository",
-  "url": "https://github.com/Ulrar/hassio-addons",
-  "maintainer": "Ulrar"
+  "name": "Ulrar repository (fork)",
+  "url": "https://github.com/szokeptr/hassio-addons",
+  "maintainer": "Ulrar-fork"
 }
