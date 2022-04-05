@@ -36,8 +36,6 @@ ENV BUILD_DEPS \
     libwebsockets-dev \
     openjdk-11-jre-headless \
     zlib1g-dev
-ENV BUILD_DEPS_NO_AARCH64 \
-    libspotify-dev
 
 ENV RUN_DEPS \
     libantlr3c-3.4-0 \
@@ -65,9 +63,6 @@ ENV RUN_DEPS \
     libwebsockets8 \
     zlib1g \
     avahi-daemon
-ENV RUN_DEPS_NO_AARCH64 \
-    libspotify-dev \
-    libspotify12
 
 RUN sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
@@ -85,10 +80,6 @@ ARG BUILD_ARCH
 RUN mkdir -p /usr/share/man/man1
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ${BUILD_DEPS} \
-    && if [ ! "$BUILD_ARCH" = "aarch64" ] ; then \
-        apt-get install -y --no-install-recommends \
-        ${BUILD_DEPS_NO_AARCH64}; \
-    fi \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -L -o /tmp/antlr-3.4-complete.jar http://www.antlr3.org/download/antlr-3.4-complete.jar \
@@ -96,24 +87,18 @@ RUN curl -L -o /tmp/antlr-3.4-complete.jar http://www.antlr3.org/download/antlr-
     && echo 'exec java -cp /tmp/antlr-3.4-complete.jar org.antlr.Tool "$@"' >> /usr/local/bin/antlr3 \
     && chmod 775 /usr/local/bin/antlr3
 
+RUN apt-get update && apt-get install -y --no-install-recommends bison
+
 WORKDIR /tmp/forked-daapd
-RUN git clone --depth 1 https://github.com/owntone/owntone-server.git . \
-    && autoreconf -fi \
-    && if [ ! "$BUILD_ARCH" = "aarch64" ] ; then \
-        ./configure \
-        --enable-itunes \
-        --enable-chromecast \
-        --with-pulseaudio \
-        --with-libwebsockets; \
-    else \
-        ./configure \
-        --enable-itunes \
-        --enable-chromecast \
-        --with-pulseaudio \
-        --with-libwebsockets; \
-    fi \
-    && make \
-	&& make install DESTDIR=/tmp/forked-daapd-install
+RUN git clone --depth 1 https://github.com/owntone/owntone-server.git .
+RUN autoreconf -fi
+RUN ./configure \
+    --enable-itunes \
+    --enable-chromecast \
+    --with-pulseaudio \
+    --with-libwebsockets
+RUN make
+RUN make install DESTDIR=/tmp/forked-daapd-install
 
 
 FROM base AS runner
@@ -121,10 +106,6 @@ ARG BUILD_ARCH
 COPY --from=builder /tmp/forked-daapd-install /
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ${RUN_DEPS} nginx \
-    && if [ ! "$BUILD_ARCH" = "aarch64" ] ; then \
-        apt-get install -y --no-install-recommends \
-        ${RUN_DEPS_NO_AARCH64}; \
-    fi \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /usr/local/etc
 RUN sed -i -e 's/\(uid.*=.*\)/uid = "root"/g' forked-daapd.conf \
