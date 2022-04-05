@@ -96,7 +96,7 @@ RUN curl -L -o /tmp/antlr-3.4-complete.jar http://www.antlr3.org/download/antlr-
     && chmod 775 /usr/local/bin/antlr3
 
 WORKDIR /tmp/forked-daapd
-RUN git clone --depth 1 https://github.com/ejurgensen/forked-daapd.git . \
+RUN git clone --depth 1 https://github.com/owntone/owntone-server.git . \
     && autoreconf -fi \
     && if [ ! "$BUILD_ARCH" = "aarch64" ] ; then \
         ./configure \
