@@ -4,6 +4,7 @@ FROM ${BUILD_FROM} as base
 ARG BUILD_ARCH
 
 ENV BUILD_DEPS \
+    flex \
     autoconf \
     automake \
     autotools-dev \
@@ -68,15 +69,15 @@ ENV RUN_DEPS_NO_AARCH64 \
     libspotify-dev \
     libspotify12
 
-#RUN sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list
+RUN sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     curl gpg gpg-agent dirmngr apt-transport-https gawk gettext gperf \
     && rm -rf /var/lib/apt/lists/*
-RUN if [ ! "$BUILD_ARCH" = "aarch64" ] ; then \
-        curl -L https://apt.mopidy.com/mopidy.list -o /etc/apt/sources.list.d/mopidy.list \
-        && curl -L https://apt.mopidy.com/mopidy.gpg -o /tmp/mopidy.gpg \
-        && apt-key add /tmp/mopidy.gpg; \
-    fi
+# RUN if [ ! "$BUILD_ARCH" = "aarch64" ] ; then \
+#     curl -L https://apt.mopidy.com/mopidy.list -o /etc/apt/sources.list.d/mopidy.list \
+#     && curl -L https://apt.mopidy.com/mopidy.gpg -o /tmp/mopidy.gpg \
+#     && apt-key add /tmp/mopidy.gpg; \
+# fi
 
 
 FROM base AS builder
@@ -103,7 +104,6 @@ RUN git clone --depth 1 https://github.com/owntone/owntone-server.git . \
         --enable-itunes \
         --enable-chromecast \
         --with-pulseaudio \
-        --enable-spotify \
         --with-libwebsockets; \
     else \
         ./configure \
